@@ -10,6 +10,8 @@ def write_image(img_path, img):
 def gray_scale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+## falta: noise removal
+
 def deskewing(img1, img2, max_features=500, good_match_percent=0.15):
     img1_gray = gray_scale(img1)
     img2_gray = gray_scale(img2)
