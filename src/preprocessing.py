@@ -10,9 +10,57 @@ def write_image(img_path, img):
 def gray_scale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-## falta: noise removal
+def dilate(img, k=5):
+    kernel = np.ones((k,k),np.uint8)
+    return cv2.dilate(img, kernel, iterations = 1)
+    
+def erode(img, k=5):
+    kernel = np.ones((k,k),np.uint8)
+    return cv2.erode(img, kernel, iterations = 1)
 
-def deskewing(img1, img2, max_features=500, good_match_percent=0.15):
+def opening(img):
+    kernel = np.ones((3, 3),np.uint8)
+    return cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+
+#n precisa disso se pa
+def rgb(img):
+    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+def sharpen(img):
+    sharpen_kernel = np.array([[-1,-1,-1], [-1, 9,-1], [-1,-1,-1]])
+    return cv2.filter2D(img, -1, sharpen_kernel)
+
+def noise_removal(img, k=5):
+    return cv2.medianBlur(img, k)
+
+def clahe(img, clip=2.0, tile_grid=8):
+    clahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(tile_grid, tile_grid))
+    return clahe.apply(img)
+
+def add_3_channels(img):
+    img2 = np.zeros((img.shape) + (3,))
+    img2[:,:,0] = img
+    img2[:,:,1] = img
+    img2[:,:,2] = img
+    return img2
+
+def deskew(img):
+    gray = gray_scale(img)
+    thresh = cv2.threshold(gray, 0, 255,
+	    cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    coords = np.column_stack(np.where(thresh > 0))
+    angle = cv2.minAreaRect(coords)[-1]
+    if angle < -45:
+        angle = -(90 + angle)
+    else:
+        angle = -angle
+    (h, w) = img.shape[:2]
+    center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    rotated = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    return rotated
+
+def align_images(img1, img2, max_features=20000, good_match_percent=0.01):
     img1_gray = gray_scale(img1)
     img2_gray = gray_scale(img2)
 
